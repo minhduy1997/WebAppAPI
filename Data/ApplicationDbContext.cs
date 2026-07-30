@@ -18,6 +18,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<VehicleImage> VehicleImages => Set<VehicleImage>();
     public DbSet<CustomerProfile> CustomerProfiles => Set<CustomerProfile>();
+    public DbSet<CustomerDocument> CustomerDocuments => Set<CustomerDocument>();
     public DbSet<Booking> Bookings => Set<Booking>();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -156,6 +157,25 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             e.HasOne(x => x.User)
                 .WithOne()
                 .HasForeignKey<CustomerProfile>(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<CustomerDocument>(e =>
+        {
+            e.ToTable("CustomerDocuments");
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.CustomerId, x.DocumentType }).IsUnique();
+            e.HasIndex(x => x.VerificationStatus);
+            e.Property(x => x.DocumentType).HasConversion<string>().HasMaxLength(30);
+            e.Property(x => x.DocumentNumber).HasMaxLength(50);
+            e.Property(x => x.FrontImageUrl).HasMaxLength(500);
+            e.Property(x => x.BackImageUrl).HasMaxLength(500);
+            e.Property(x => x.VerificationStatus).HasConversion<string>().HasMaxLength(30);
+            e.Property(x => x.RejectionReason).HasMaxLength(500);
+
+            e.HasOne(x => x.Customer)
+                .WithMany(c => c.Documents)
+                .HasForeignKey(x => x.CustomerId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

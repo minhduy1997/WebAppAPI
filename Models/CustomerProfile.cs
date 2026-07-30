@@ -95,4 +95,6 @@ public class CustomerProfile
     public ApplicationUser? User { get; set; }
 
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
+    public ICollection<CustomerDocument> Documents { get; set; } = new List<CustomerDocument>();
 }

@@ -210,6 +210,8 @@ using (var scope = app.Services.CreateScope())
         new AppPage { Name = "Loại xe", Path = "/catalog/vehicle-categories", Description = "Danh mục loại xe", SortOrder = 30, IsActive = true },
         new AppPage { Name = "Mẫu xe", Path = "/catalog/vehicle-models", Description = "Danh mục mẫu xe chi tiết", SortOrder = 31, IsActive = true },
         new AppPage { Name = "Quản lý xe", Path = "/catalog/vehicles", Description = "Quản lý từng chiếc xe trong đội", SortOrder = 32, IsActive = true },
+        new AppPage { Name = "Khách hàng", Path = "/ops/customers", Description = "Danh sách khách hàng", SortOrder = 40, IsActive = true },
+        new AppPage { Name = "Duyệt giấy tờ", Path = "/ops/customer-documents", Description = "Duyệt CCCD/GPLX khách hàng", SortOrder = 41, IsActive = true },
         new AppPage { Name = "Test Page A", Path = "/test/page-a", Description = "Page test A", SortOrder = 20, IsActive = true },
         new AppPage { Name = "Test Page B", Path = "/test/page-b", Description = "Page test B", SortOrder = 21, IsActive = true },
     };
@@ -253,11 +255,16 @@ using (var scope = app.Services.CreateScope())
         await db.SaveChangesAsync();
     }
 
-    // Grant Home + Profile + test pages to Staff (internal)
+    // Grant Home + Profile + ops customer pages + test pages to Staff
     var staffRole = await roleManager.FindByNameAsync(AppRoles.Staff);
     if (staffRole != null)
     {
-        var staffPaths = new[] { "/", "/profile", "/test/page-a", "/test/page-b" };
+        var staffPaths = new[]
+        {
+            "/", "/profile",
+            "/ops/customers", "/ops/customer-documents",
+            "/test/page-a", "/test/page-b",
+        };
         var staffPageIds = await db.AppPages
             .Where(p => staffPaths.Contains(p.Path))
             .Select(p => p.Id)

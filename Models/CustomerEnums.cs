@@ -16,6 +16,14 @@ public enum CustomerVerificationStatus
     EXPIRED = 4,
 }
 
+public enum CustomerDocumentType
+{
+    IDENTITY_CARD = 0,
+    DRIVER_LICENSE = 1,
+    PASSPORT = 2,
+    OTHER = 3,
+}
+
 public enum BookingStatus
 {
     DRAFT = 0,

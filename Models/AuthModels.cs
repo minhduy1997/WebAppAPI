@@ -47,6 +47,9 @@ public class AuthResponse
     public string? AvatarUrl { get; set; }
     public IList<string> Roles { get; set; } = new List<string>();
     public IList<string> AllowedPages { get; set; } = new List<string>();
+    public Guid? CustomerProfileId { get; set; }
+    public string? CustomerCode { get; set; }
+    public string? VerificationStatus { get; set; }
 }
 
 public class AssignRoleRequest
@@ -460,4 +463,222 @@ public class VehicleModelLookupItemDto
     public string ModelName { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
 }
+
+// ---- Customer profile DTOs ----
+
+public class CustomerProfileDto
+{
+    public Guid Id { get; set; }
+    public string UserId { get; set; } = string.Empty;
+    public string CustomerCode { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public DateOnly? DateOfBirth { get; set; }
+    public string? Gender { get; set; }
+    public string PhoneNumber { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? AddressLine { get; set; }
+    public string? Ward { get; set; }
+    public string? Province { get; set; }
+    public string VerificationStatus { get; set; } = string.Empty;
+    public DateTime? VerifiedAt { get; set; }
+    public bool IsBlacklisted { get; set; }
+    public string? BlacklistReason { get; set; }
+    public string? Note { get; set; }
+    public IList<CustomerDocumentDto> Documents { get; set; } = new List<CustomerDocumentDto>();
+}
+
+public class CustomerDocumentDto
+{
+    public Guid Id { get; set; }
+    public Guid CustomerId { get; set; }
+    public string CustomerCode { get; set; } = string.Empty;
+    public string CustomerName { get; set; } = string.Empty;
+    public string DocumentType { get; set; } = string.Empty;
+    public string? DocumentNumber { get; set; }
+    public string? FrontImageUrl { get; set; }
+    public string? BackImageUrl { get; set; }
+    public DateOnly? IssuedDate { get; set; }
+    public DateOnly? ExpiredAt { get; set; }
+    public string VerificationStatus { get; set; } = string.Empty;
+    public string? RejectionReason { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+public class UpsertCustomerDocumentRequest
+{
+    [MaxLength(50)]
+    public string? DocumentNumber { get; set; }
+
+    public DateOnly? IssuedDate { get; set; }
+
+    public DateOnly? ExpiredAt { get; set; }
+}
+
+public class ReviewCustomerDocumentRequest
+{
+    [Required]
+    public string Status { get; set; } = string.Empty; // VERIFIED | REJECTED
+
+    [MaxLength(500)]
+    public string? RejectionReason { get; set; }
+}
+
+public class UpdateCustomerBasicRequest
+{
+    [Required]
+    [MaxLength(150)]
+    public string FullName { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(20)]
+    public string PhoneNumber { get; set; } = string.Empty;
+
+    public DateOnly? DateOfBirth { get; set; }
+
+    public string? Gender { get; set; }
+
+    [MaxLength(300)]
+    public string? AddressLine { get; set; }
+
+    [MaxLength(100)]
+    public string? Ward { get; set; }
+
+    [MaxLength(100)]
+    public string? Province { get; set; }
+}
+
+public class SubmitCustomerDocumentsRequest
+{
+    /// <summary>Optional profile fields submitted together with documents.</summary>
+    public DateOnly? DateOfBirth { get; set; }
+    public string? Gender { get; set; }
+
+    [MaxLength(300)]
+    public string? AddressLine { get; set; }
+
+    [MaxLength(100)]
+    public string? Ward { get; set; }
+
+    [MaxLength(100)]
+    public string? Province { get; set; }
+}
+
+public class ReviewCustomerVerificationRequest
+{
+    [Required]
+    public string Status { get; set; } = string.Empty; // VERIFIED | REJECTED
+
+    [MaxLength(1000)]
+    public string? Note { get; set; }
+}
+
+public class SetCustomerBlacklistRequest
+{
+    public bool IsBlacklisted { get; set; }
+
+    [MaxLength(500)]
+    public string? BlacklistReason { get; set; }
+}
+
+// ---- Booking DTOs ----
+
+public class BookingDto
+{
+    public Guid Id { get; set; }
+    public string BookingCode { get; set; } = string.Empty;
+    public Guid CustomerId { get; set; }
+    public string CustomerCode { get; set; } = string.Empty;
+    public string CustomerName { get; set; } = string.Empty;
+    public Guid VehicleModelId { get; set; }
+    public string VehicleModelCode { get; set; } = string.Empty;
+    public string VehicleModelName { get; set; } = string.Empty;
+    public Guid? VehicleId { get; set; }
+    public string? VehicleCode { get; set; }
+    public string? LicensePlate { get; set; }
+    public Guid PickupLocationId { get; set; }
+    public Guid ReturnLocationId { get; set; }
+    public DateTime PickupAt { get; set; }
+    public DateTime ExpectedReturnAt { get; set; }
+    public DateTime? ActualReturnAt { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public decimal QuotedAmount { get; set; }
+    public decimal DepositRequired { get; set; }
+    public decimal DepositPaid { get; set; }
+    public decimal DiscountAmount { get; set; }
+    public decimal DeliveryFee { get; set; }
+    public decimal? FinalAmount { get; set; }
+    public string CurrencyCode { get; set; } = "VND";
+    public string? CustomerNote { get; set; }
+    public string? InternalNote { get; set; }
+    public DateTime? ExpiredAt { get; set; }
+    public DateTime? ConfirmedAt { get; set; }
+    public DateTime? CancelledAt { get; set; }
+    public string? CancellationReason { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class CreateBookingRequest
+{
+    [Required]
+    public Guid VehicleModelId { get; set; }
+
+    [Required]
+    public Guid PickupLocationId { get; set; }
+
+    [Required]
+    public Guid ReturnLocationId { get; set; }
+
+    [Required]
+    public DateTime PickupAt { get; set; }
+
+    [Required]
+    public DateTime ExpectedReturnAt { get; set; }
+
+    public decimal? DeliveryFee { get; set; }
+
+    public decimal? DiscountAmount { get; set; }
+
+    [MaxLength(1000)]
+    public string? CustomerNote { get; set; }
+
+    /// <summary>If true, create as PENDING_DEPOSIT (requires VERIFIED). Otherwise DRAFT.</summary>
+    public bool Submit { get; set; } = true;
+}
+
+public class CancelBookingRequest
+{
+    [MaxLength(500)]
+    public string? CancellationReason { get; set; }
+}
+
+public class AssignVehicleRequest
+{
+    [Required]
+    public Guid VehicleId { get; set; }
+}
+
+public class UpdateBookingStatusRequest
+{
+    [Required]
+    public string Status { get; set; } = string.Empty;
+
+    [MaxLength(1000)]
+    public string? InternalNote { get; set; }
+
+    public decimal? DepositPaid { get; set; }
+
+    public decimal? FinalAmount { get; set; }
+
+    public DateTime? ActualReturnAt { get; set; }
+}
+
+public class BookingLookupsDto
+{
+    public IList<string> Statuses { get; set; } = new List<string>();
+    public IList<string> VerificationStatuses { get; set; } = new List<string>();
+    public IList<string> Genders { get; set; } = new List<string>();
+    public IList<string> DocumentTypes { get; set; } = new List<string>();
+}
+
 

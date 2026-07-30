@@ -118,7 +118,7 @@ public class AuthController : ControllerBase
         var roles = await _userManager.GetRolesAsync(user);
         var allowedPages = await _permissionService.GetAllowedPagePathsAsync(user);
 
-        return Ok(ToAuthResponse(user, token, expiration, roles, allowedPages));
+        return Ok(await ToAuthResponseAsync(user, token, expiration, roles, allowedPages));
     }
 
     [HttpPost("login")]
@@ -135,7 +135,7 @@ public class AuthController : ControllerBase
         var roles = await _userManager.GetRolesAsync(user);
         var allowedPages = await _permissionService.GetAllowedPagePathsAsync(user);
 
-        return Ok(ToAuthResponse(user, token, expiration, roles, allowedPages));
+        return Ok(await ToAuthResponseAsync(user, token, expiration, roles, allowedPages));
     }
 
     [Authorize(Roles = "Admin")]
@@ -166,6 +166,7 @@ public class AuthController : ControllerBase
 
         var roles = await _userManager.GetRolesAsync(user);
         var allowedPages = await _permissionService.GetAllowedPagePathsAsync(user);
+        var response = await ToAuthResponseAsync(user, token: string.Empty, expiration: default, roles, allowedPages);
         return Ok(new
         {
             user.Email,
@@ -174,7 +175,10 @@ public class AuthController : ControllerBase
             user.AvatarUrl,
             user.IsActive,
             Roles = roles,
-            AllowedPages = allowedPages
+            AllowedPages = allowedPages,
+            response.CustomerProfileId,
+            response.CustomerCode,
+            response.VerificationStatus
         });
     }
 
@@ -213,7 +217,7 @@ public class AuthController : ControllerBase
         var roles = await _userManager.GetRolesAsync(user);
         var allowedPages = await _permissionService.GetAllowedPagePathsAsync(user);
 
-        return Ok(ToAuthResponse(user, token, expiration, roles, allowedPages));
+        return Ok(await ToAuthResponseAsync(user, token, expiration, roles, allowedPages));
     }
 
     [Authorize]
@@ -272,7 +276,7 @@ public class AuthController : ControllerBase
         var roles = await _userManager.GetRolesAsync(user);
         var allowedPages = await _permissionService.GetAllowedPagePathsAsync(user);
 
-        return Ok(ToAuthResponse(user, token, expiration, roles, allowedPages));
+        return Ok(await ToAuthResponseAsync(user, token, expiration, roles, allowedPages));
     }
 
     [Authorize]
@@ -331,19 +335,37 @@ public class AuthController : ControllerBase
         return await _userManager.FindByIdAsync(userId);
     }
 
-    private static AuthResponse ToAuthResponse(
+    private async Task<AuthResponse> ToAuthResponseAsync(
         ApplicationUser user,
         string token,
         DateTime expiration,
         IList<string> roles,
-        IList<string>? allowedPages = null) => new()
+        IList<string>? allowedPages = null)
     {
-        Token = token,
-        Expiration = expiration,
-        Email = user.Email!,
-        FullName = user.FullName,
-        AvatarUrl = user.AvatarUrl,
-        Roles = roles,
-        AllowedPages = allowedPages ?? new List<string>()
-    };
+        var response = new AuthResponse
+        {
+            Token = token,
+            Expiration = expiration,
+            Email = user.Email!,
+            FullName = user.FullName,
+            AvatarUrl = user.AvatarUrl,
+            Roles = roles,
+            AllowedPages = allowedPages ?? new List<string>()
+        };
+
+        if (roles.Contains(AppRoles.Customer))
+        {
+            var profile = await _db.CustomerProfiles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.UserId == user.Id);
+            if (profile != null)
+            {
+                response.CustomerProfileId = profile.Id;
+                response.CustomerCode = profile.CustomerCode;
+                response.VerificationStatus = profile.VerificationStatus.ToString();
+            }
+        }
+
+        return response;
+    }
 }
