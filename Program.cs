@@ -167,6 +167,8 @@ using (var scope = app.Services.CreateScope())
         new AppPage { Name = "Quản lý Page", Path = "/admin/pages", Description = "CRUD khai báo page", SortOrder = 11, IsActive = true },
         new AppPage { Name = "Quản lý Role", Path = "/admin/roles", Description = "Quản lý role và gán role cho user", SortOrder = 12, IsActive = true },
         new AppPage { Name = "Phân quyền Page", Path = "/admin/permissions", Description = "Gán page theo role", SortOrder = 13, IsActive = true },
+        new AppPage { Name = "Loại xe", Path = "/catalog/vehicle-categories", Description = "Danh mục loại xe", SortOrder = 30, IsActive = true },
+        new AppPage { Name = "Mẫu xe", Path = "/catalog/vehicle-models", Description = "Danh mục mẫu xe chi tiết", SortOrder = 31, IsActive = true },
         new AppPage { Name = "Test Page A", Path = "/test/page-a", Description = "Page test A", SortOrder = 20, IsActive = true },
         new AppPage { Name = "Test Page B", Path = "/test/page-b", Description = "Page test B", SortOrder = 21, IsActive = true },
     };
