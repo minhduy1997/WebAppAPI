@@ -111,18 +111,55 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Seed Admin role + default admin user on first run
+// Seed roles + default admin user on startup
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-    string[] roles = { "Admin", "User" };
-    foreach (var role in roles)
+    foreach (var role in AppRoles.All)
     {
         if (!await roleManager.RoleExistsAsync(role))
             await roleManager.CreateAsync(new IdentityRole(role));
+    }
+
+    // Migrate legacy "User" → "Staff" (users + page permissions), then remove legacy role
+    if (await roleManager.RoleExistsAsync(AppRoles.LegacyUser))
+    {
+        var legacyRole = await roleManager.FindByNameAsync(AppRoles.LegacyUser);
+        var staffRoleForMigration = await roleManager.FindByNameAsync(AppRoles.Staff);
+        if (legacyRole != null && staffRoleForMigration != null)
+        {
+            var legacyUsers = await userManager.GetUsersInRoleAsync(AppRoles.LegacyUser);
+            foreach (var u in legacyUsers)
+            {
+                if (!await userManager.IsInRoleAsync(u, AppRoles.Staff))
+                    await userManager.AddToRoleAsync(u, AppRoles.Staff);
+                await userManager.RemoveFromRoleAsync(u, AppRoles.LegacyUser);
+            }
+
+            var legacyPerms = await db.RolePagePermissions
+                .Where(p => p.RoleId == legacyRole.Id)
+                .ToListAsync();
+            foreach (var perm in legacyPerms)
+            {
+                var exists = await db.RolePagePermissions.AnyAsync(p =>
+                    p.RoleId == staffRoleForMigration.Id && p.PageId == perm.PageId);
+                if (!exists)
+                {
+                    db.RolePagePermissions.Add(new RolePagePermission
+                    {
+                        RoleId = staffRoleForMigration.Id,
+                        PageId = perm.PageId
+                    });
+                }
+            }
+            db.RolePagePermissions.RemoveRange(legacyPerms);
+            await db.SaveChangesAsync();
+
+            await roleManager.DeleteAsync(legacyRole);
+        }
     }
 
     var adminEmail = "admin@webappapi.com";
@@ -137,7 +174,7 @@ using (var scope = app.Services.CreateScope())
             IsActive = true
         };
         await userManager.CreateAsync(adminUser, "Admin@123");
-        await userManager.AddToRoleAsync(adminUser, "Admin");
+        await userManager.AddToRoleAsync(adminUser, AppRoles.Admin);
     }
     else
     {
@@ -154,6 +191,9 @@ using (var scope = app.Services.CreateScope())
         }
         if (changed)
             await userManager.UpdateAsync(adminUser);
+
+        if (!await userManager.IsInRoleAsync(adminUser, AppRoles.Admin))
+            await userManager.AddToRoleAsync(adminUser, AppRoles.Admin);
     }
 
 
@@ -169,6 +209,7 @@ using (var scope = app.Services.CreateScope())
         new AppPage { Name = "Phân quyền Page", Path = "/admin/permissions", Description = "Gán page theo role", SortOrder = 13, IsActive = true },
         new AppPage { Name = "Loại xe", Path = "/catalog/vehicle-categories", Description = "Danh mục loại xe", SortOrder = 30, IsActive = true },
         new AppPage { Name = "Mẫu xe", Path = "/catalog/vehicle-models", Description = "Danh mục mẫu xe chi tiết", SortOrder = 31, IsActive = true },
+        new AppPage { Name = "Quản lý xe", Path = "/catalog/vehicles", Description = "Quản lý từng chiếc xe trong đội", SortOrder = 32, IsActive = true },
         new AppPage { Name = "Test Page A", Path = "/test/page-a", Description = "Page test A", SortOrder = 20, IsActive = true },
         new AppPage { Name = "Test Page B", Path = "/test/page-b", Description = "Page test B", SortOrder = 21, IsActive = true },
     };
@@ -192,7 +233,7 @@ using (var scope = app.Services.CreateScope())
     }
 
     // Grant all pages to Admin role
-    var adminRole = await roleManager.FindByNameAsync("Admin");
+    var adminRole = await roleManager.FindByNameAsync(AppRoles.Admin);
     if (adminRole != null)
     {
         var allPageIds = await db.AppPages.Select(p => p.Id).ToListAsync();
@@ -212,25 +253,25 @@ using (var scope = app.Services.CreateScope())
         await db.SaveChangesAsync();
     }
 
-    // Grant Home + Profile + test pages to User role
-    var userRole = await roleManager.FindByNameAsync("User");
-    if (userRole != null)
+    // Grant Home + Profile + test pages to Staff (internal)
+    var staffRole = await roleManager.FindByNameAsync(AppRoles.Staff);
+    if (staffRole != null)
     {
-        var userPaths = new[] { "/", "/profile", "/test/page-a", "/test/page-b" };
-        var userPageIds = await db.AppPages
-            .Where(p => userPaths.Contains(p.Path))
+        var staffPaths = new[] { "/", "/profile", "/test/page-a", "/test/page-b" };
+        var staffPageIds = await db.AppPages
+            .Where(p => staffPaths.Contains(p.Path))
             .Select(p => p.Id)
             .ToListAsync();
 
-        foreach (var pageId in userPageIds)
+        foreach (var pageId in staffPageIds)
         {
             var exists = await db.RolePagePermissions
-                .AnyAsync(p => p.RoleId == userRole.Id && p.PageId == pageId);
+                .AnyAsync(p => p.RoleId == staffRole.Id && p.PageId == pageId);
             if (!exists)
             {
                 db.RolePagePermissions.Add(new RolePagePermission
                 {
-                    RoleId = userRole.Id,
+                    RoleId = staffRole.Id,
                     PageId = pageId
                 });
             }

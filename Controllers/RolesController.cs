@@ -92,8 +92,8 @@ public class RolesController : ControllerBase
         if (role == null)
             return NotFound(new { message = "Role not found" });
 
-        if (role.Name is "Admin" or "User")
-            return BadRequest(new { message = "Cannot delete system roles Admin/User" });
+        if (role.Name is AppRoles.Admin or AppRoles.Staff or AppRoles.Customer or AppRoles.LegacyUser)
+            return BadRequest(new { message = "Cannot delete system roles Admin/Staff/Customer" });
 
         var usersInRole = await _userManager.GetUsersInRoleAsync(role.Name!);
         foreach (var user in usersInRole)

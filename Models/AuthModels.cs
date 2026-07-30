@@ -7,14 +7,25 @@ namespace WebAppApi.Models;
 public class RegisterRequest
 {
     [Required]
+    [MaxLength(150)]
+    public string FullName { get; set; } = string.Empty;
+
+    [Required]
     [EmailAddress]
+    [MaxLength(150)]
     public string Email { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(20)]
+    public string PhoneNumber { get; set; } = string.Empty;
 
     [Required]
     [MinLength(6)]
     public string Password { get; set; } = string.Empty;
 
-    public string? FullName { get; set; }
+    [Required]
+    [MinLength(6)]
+    public string ConfirmPassword { get; set; } = string.Empty;
 }
 
 public class LoginRequest
@@ -341,5 +352,112 @@ public class VehicleModelLookupsDto
     public IList<string> TransmissionTypes { get; set; } = new List<string>();
     public IList<string> FuelTypes { get; set; } = new List<string>();
     public IList<string> Drivetrains { get; set; } = new List<string>();
+}
+
+// ---- Vehicles (physical units) DTOs ----
+
+public class VehicleDto
+{
+    public Guid Id { get; set; }
+    public Guid VehicleModelId { get; set; }
+    public string VehicleModelCode { get; set; } = string.Empty;
+    public string VehicleModelName { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string LicensePlate { get; set; } = string.Empty;
+    public string? VinNumber { get; set; }
+    public string? EngineNumber { get; set; }
+    public string? Color { get; set; }
+    public short? ManufactureYear { get; set; }
+    public DateOnly? RegistrationDate { get; set; }
+    public decimal CurrentOdometer { get; set; }
+    public byte? FuelLevel { get; set; }
+    public Guid? LocationId { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public DateOnly? RegistrationExpiredAt { get; set; }
+    public DateOnly? InsuranceExpiredAt { get; set; }
+    public DateOnly? MaintenanceDueAt { get; set; }
+    public decimal? MaintenanceDueOdometer { get; set; }
+    public DateOnly? PurchaseDate { get; set; }
+    public decimal? PurchasePrice { get; set; }
+    public decimal? RentalDailyPriceOverride { get; set; }
+    public string? Note { get; set; }
+    public bool IsActive { get; set; }
+    public IList<VehicleImageDto> Images { get; set; } = new List<VehicleImageDto>();
+}
+
+public class VehicleImageDto
+{
+    public Guid Id { get; set; }
+    public string Url { get; set; } = string.Empty;
+    public string? OriginalFileName { get; set; }
+    public int SortOrder { get; set; }
+    public bool IsPrimary { get; set; }
+}
+
+public class VehicleRequest
+{
+    [Required]
+    public Guid VehicleModelId { get; set; }
+
+    [Required]
+    [MaxLength(20)]
+    public string LicensePlate { get; set; } = string.Empty;
+
+    [MaxLength(50)]
+    public string? VinNumber { get; set; }
+
+    [MaxLength(50)]
+    public string? EngineNumber { get; set; }
+
+    [MaxLength(50)]
+    public string? Color { get; set; }
+
+    public short? ManufactureYear { get; set; }
+
+    public DateOnly? RegistrationDate { get; set; }
+
+    [Required]
+    public decimal CurrentOdometer { get; set; }
+
+    public byte? FuelLevel { get; set; }
+
+    public Guid? LocationId { get; set; }
+
+    [Required]
+    public string Status { get; set; } = "AVAILABLE";
+
+    public DateOnly? RegistrationExpiredAt { get; set; }
+
+    public DateOnly? InsuranceExpiredAt { get; set; }
+
+    public DateOnly? MaintenanceDueAt { get; set; }
+
+    public decimal? MaintenanceDueOdometer { get; set; }
+
+    public DateOnly? PurchaseDate { get; set; }
+
+    public decimal? PurchasePrice { get; set; }
+
+    public decimal? RentalDailyPriceOverride { get; set; }
+
+    [MaxLength(1000)]
+    public string? Note { get; set; }
+
+    public bool IsActive { get; set; } = true;
+}
+
+public class VehicleLookupsDto
+{
+    public IList<VehicleModelLookupItemDto> Models { get; set; } = new List<VehicleModelLookupItemDto>();
+    public IList<string> Statuses { get; set; } = new List<string>();
+}
+
+public class VehicleModelLookupItemDto
+{
+    public Guid Id { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public string Brand { get; set; } = string.Empty;
+    public string ModelName { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
 }
 
