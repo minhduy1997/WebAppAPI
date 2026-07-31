@@ -681,4 +681,56 @@ public class BookingLookupsDto
     public IList<string> DocumentTypes { get; set; } = new List<string>();
 }
 
+// ---- Public catalog (customer website) DTOs ----
+
+public class PublicCategoryDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+}
+
+/// <summary>Card/list fields for published vehicle models.</summary>
+public class PublicVehicleModelSummaryDto
+{
+    public Guid Id { get; set; }
+    public string Brand { get; set; } = string.Empty;
+    public string ModelName { get; set; } = string.Empty;
+    public string? VariantName { get; set; }
+    public short ManufactureYear { get; set; }
+    public int CategoryId { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public byte SeatCount { get; set; }
+    public string TransmissionType { get; set; } = string.Empty;
+    public string FuelType { get; set; } = string.Empty;
+    public decimal BaseDailyPrice { get; set; }
+    public decimal DepositAmount { get; set; }
+    public string? ThumbnailUrl { get; set; }
+}
+
+/// <summary>Full customer-facing detail (no admin/ops fields).</summary>
+public class PublicVehicleModelDetailDto : PublicVehicleModelSummaryDto
+{
+    public byte? DoorCount { get; set; }
+    public decimal? EngineCapacity { get; set; }
+    public string? Drivetrain { get; set; }
+    public byte? LuggageCapacity { get; set; }
+    public decimal? FuelConsumption { get; set; }
+    public decimal? WeekendDailyPrice { get; set; }
+    public decimal? HolidayDailyPrice { get; set; }
+    public int? IncludedKmPerDay { get; set; }
+    public decimal? ExtraKmPrice { get; set; }
+    public decimal? LateHourPrice { get; set; }
+    public string? Description { get; set; }
+}
+
+public class PublicCatalogLookupsDto
+{
+    public IList<PublicCategoryDto> Categories { get; set; } = new List<PublicCategoryDto>();
+    public IList<string> Brands { get; set; } = new List<string>();
+    public IList<string> TransmissionTypes { get; set; } = new List<string>();
+    public IList<string> FuelTypes { get; set; } = new List<string>();
+    public IList<string> Drivetrains { get; set; } = new List<string>();
+}
+
 
